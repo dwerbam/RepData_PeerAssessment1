@@ -61,16 +61,23 @@ cleandf <- na.omit(df)
 ## What is mean total number of steps taken per day?
 ```{r}
 
-meantotaldf <- cleandf %>% 
+totaldf <- cleandf %>% 
     group_by(fixeddate) %>% 
-    summarise(totsteps=sum(steps))
+    summarise(totsteps=sum(steps), meansteps=mean(steps), mediansteps=median(steps))
 
-as_tibble(meantotaldf)
+as_tibble(totaldf)
 ```
+histogram total numbers of steps per day:
+```{r histmean}
+ggplot(totaldf) + 
+    geom_histogram(aes(meansteps), fill='tomato', alpha=.5) + 
+    labs(title='Total steps per day')
+```
+
 Let's check how this looks in a plot, with some quick categories based on the level of activity:
 ```{r totstepsday}
-ggplot(meantotaldf, aes( fixeddate, totsteps ) ) + 
-    geom_point() + 
+ggplot(totaldf, aes( fixeddate, totsteps ) ) + 
+    geom_step() + 
     geom_smooth(method=lm, color="tomato") +
     labs(title = 'Mean total steps per day', x = 'Day', y = 'Total steps') 
 ```
@@ -88,7 +95,6 @@ dpattern <- cleandf %>%
 ggplot(dpattern, aes( interval, steps )) + 
     geom_point(alpha=3/10) + 
     geom_smooth(color="tomato") +
-#    geom_step(data=maxperday) +
     labs(title = 'Avg activity pattern', x = 'Interval', y = 'Mean steps') 
 
 ```

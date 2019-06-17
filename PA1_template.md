@@ -128,34 +128,48 @@ cleandf <- na.omit(df)
 ## What is mean total number of steps taken per day?
 
 ```r
-meantotaldf <- cleandf %>% 
+totaldf <- cleandf %>% 
     group_by(fixeddate) %>% 
-    summarise(totsteps=sum(steps))
+    summarise(totsteps=sum(steps), meansteps=mean(steps), mediansteps=median(steps))
 
-as_tibble(meantotaldf)
+as_tibble(totaldf)
 ```
 
 ```
-## # A tibble: 53 x 2
-##    fixeddate  totsteps
-##    <date>        <int>
-##  1 2012-10-02      126
-##  2 2012-10-03    11352
-##  3 2012-10-04    12116
-##  4 2012-10-05    13294
-##  5 2012-10-06    15420
-##  6 2012-10-07    11015
-##  7 2012-10-09    12811
-##  8 2012-10-10     9900
-##  9 2012-10-11    10304
-## 10 2012-10-12    17382
+## # A tibble: 53 x 4
+##    fixeddate  totsteps meansteps mediansteps
+##    <date>        <int>     <dbl>       <dbl>
+##  1 2012-10-02      126     0.438           0
+##  2 2012-10-03    11352    39.4             0
+##  3 2012-10-04    12116    42.1             0
+##  4 2012-10-05    13294    46.2             0
+##  5 2012-10-06    15420    53.5             0
+##  6 2012-10-07    11015    38.2             0
+##  7 2012-10-09    12811    44.5             0
+##  8 2012-10-10     9900    34.4             0
+##  9 2012-10-11    10304    35.8             0
+## 10 2012-10-12    17382    60.4             0
 ## # … with 43 more rows
 ```
+histogram total numbers of steps per day:
+
+```r
+ggplot(totaldf) + 
+    geom_histogram(aes(meansteps), fill='tomato', alpha=.5) + 
+    labs(title='Total steps per day')
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/histmean-1.png)<!-- -->
+
 Let's check how this looks in a plot, with some quick categories based on the level of activity:
 
 ```r
-ggplot(meantotaldf, aes( fixeddate, totsteps ) ) + 
-    geom_point() + 
+ggplot(totaldf, aes( fixeddate, totsteps ) ) + 
+    geom_step() + 
     geom_smooth(method=lm, color="tomato") +
     labs(title = 'Mean total steps per day', x = 'Day', y = 'Total steps') 
 ```
@@ -175,7 +189,6 @@ dpattern <- cleandf %>%
 ggplot(dpattern, aes( interval, steps )) + 
     geom_point(alpha=3/10) + 
     geom_smooth(color="tomato") +
-#    geom_step(data=maxperday) +
     labs(title = 'Avg activity pattern', x = 'Interval', y = 'Mean steps') 
 ```
 
