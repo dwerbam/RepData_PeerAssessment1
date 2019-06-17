@@ -8,18 +8,125 @@ output:
 
 ## Loading and preprocessing the data
 
+### install and load needed libraries
+```{r}
+installif <- function(p) {
+    if (!p %in% rownames(installed.packages()))
+        install.packages(p)
+    TRUE
+}
+sapply(c("dplyr", "ggplot2", "lubridate"), installif)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
 
+### fetch the zip file from internet and extract content (if needed)
+
+```{r}
+destZipFile <- './activity.zip'
+fileUrl<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+if(!file.exists(destZipFile)) {
+    download.file(fileUrl, destfile = destZipFile, method = "curl")
+    unzip(destZipFile, overwrite = T)
+}
+```
+
+### fix a seed to show reproducible results
+```{r}
+set.seed(1234)
+```
+
+### reads the content
+```{r}
+df <- read.csv("./activity.csv")
+```
+
+Structure of dataframe...
+```{r}
+str(df)
+```
+Some basic statistics...
+```{r}
+summary(df)
+```
+
+let's fix the dates and use a clean version without missing values
+```{r}
+df <- df %>% mutate(fixeddate = ymd(date)) %>% select(-date)
+cleandf <- na.omit(df)
+
+```
 
 ## What is mean total number of steps taken per day?
+```{r}
 
+meantotaldf <- cleandf %>% 
+    group_by(fixeddate) %>% 
+    summarise(totsteps=sum(steps))
 
+as_tibble(meantotaldf)
+```
+Let's check how this looks in a plot, with some quick categories based on the level of activity:
+```{r totstepsday}
+ggplot(meantotaldf, aes( fixeddate, totsteps ) ) + 
+    geom_point() + 
+    geom_smooth(method=lm, color="tomato") +
+    labs(title = 'Mean total steps per day', x = 'Day', y = 'Total steps') 
+```
+
+As you can see, the red line (linear model) is also showing a the mean of the total steps per day.
 
 ## What is the average daily activity pattern?
 
+```{r avgdaypattern}
 
+dpattern <- cleandf %>% 
+    group_by(interval) %>% 
+    summarise(steps=mean(steps))
+
+ggplot(dpattern, aes( interval, steps )) + 
+    geom_point(alpha=3/10) + 
+    geom_smooth(color="tomato") +
+#    geom_step(data=maxperday) +
+    labs(title = 'Avg activity pattern', x = 'Interval', y = 'Mean steps') 
+
+```
 
 ## Imputing missing values
 
+How many NAs do we have?
+```{r}
+summary(df)
+```
+It looks like we have 2304 NA's. We are going to use Amelia library to complete (impute) it:
+```{r}
+installif("Amelia")
+library(Amelia)
+amelia_fit <- amelia(
+    df, 
+    m=1, 
+    parallel = "multicore", 
+    bounds = matrix( c(1,0,max(df$steps)), nrow=1, ncol=3))
 
+imputed <- amelia_fit$imputations[[1]]
+
+print(dim(df)==dim(imputed))
+summary(imputed)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r avgweekpattern}
+wpattern <- imputed %>% 
+    mutate( wday = weekdays(fixeddate)) %>%
+    group_by(wday, interval) %>% 
+    summarise(meansteps=mean(steps))
+
+ggplot(wpattern, aes( interval, meansteps )) + 
+    geom_point(alpha=3/10) + 
+    geom_smooth( color="tomato") +
+    facet_wrap(wday~.) +
+    labs(title = 'Avg activity pattern per day of the week', x = 'Interval', y = 'Mean steps') 
+
+```
