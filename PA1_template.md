@@ -155,7 +155,7 @@ histogram total numbers of steps per day:
 
 ```r
 ggplot(totaldf) + 
-    geom_histogram(aes(meansteps), fill='tomato', alpha=.5) + 
+    geom_histogram(aes(totsteps), fill='tomato', alpha=.5) + 
     labs(title='Total steps per day')
 ```
 
@@ -197,6 +197,19 @@ ggplot(dpattern, aes( interval, steps )) +
 ```
 
 ![](PA1_template_files/figure-html/avgdaypattern-1.png)<!-- -->
+
+So it look like activity starts every day after interval 500:
+
+```r
+interv_secs <-3600*24/(max(df$interval)+1)
+(500/interv_secs)-1 #hours starts at 0
+```
+
+```
+## [1] 12.63426
+```
+so activity starts after 12:30pm
+
 
 ## Imputing missing values
 
@@ -306,3 +319,6 @@ ggplot(wpattern, aes( interval, meansteps )) +
 ```
 
 ![](PA1_template_files/figure-html/avgweekpattern-1.png)<!-- -->
+
+It looks like from Mon, Tue, Wed, and Friday the activity is higher than on weekends and Thursdays.
+
